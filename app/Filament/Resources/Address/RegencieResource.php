@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Address;
 
-use App\Filament\Resources\Address\ProvinceResource\Pages;
-use App\Filament\Resources\Address\ProvinceResource\RelationManagers;
+use App\Filament\Resources\Address\RegencieResource\Pages;
+use App\Filament\Resources\Address\RegencieResource\RelationManagers;
 use App\Models\Address\Province;
+use App\Models\Address\Regencie;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,9 +14,9 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class ProvinceResource extends Resource
+class RegencieResource extends Resource
 {
-    protected static ?string $model = Province::class;
+    protected static ?string $model = Regencie::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -23,12 +24,19 @@ class ProvinceResource extends Resource
     {
         return $form
             ->schema([
+                Forms\Components\Select::make('province_id')
+                    ->label('Provinsi')
+                    ->relationship('province', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->required(),
+
                 Forms\Components\TextInput::make('id')
                     ->label('Kode ' . self::getModelLabel())
                     ->required()
-                    ->maxLength(2)
-                    ->minLength(2)
-                    ->regex('/^\d{2}$/')
+                    ->maxLength(4)
+                    ->minLength(4)
+                    ->regex('/^\d{4}$/')
                     ->unique(ignoreRecord: true)
                     ->validationMessages([
                         'unique' => 'Kode ini sudah digunakan! Silakan pilih kode lain.',
@@ -47,13 +55,23 @@ class ProvinceResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')
                     ->label('Kode ' . self::getModelLabel())
+                    ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nama ' . self::getModelLabel())
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('province.name')
+                    ->label('Provinsi')->sortable()
                     ->searchable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('province_id')
+                    ->label('Filter Provinsi')
+                    ->options(fn() => Province::pluck('name', 'id')->toArray())
+                    ->attribute('province_id')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -64,7 +82,7 @@ class ProvinceResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->searchPlaceholder('Cari ' . self::getModelLabel() . '...');;
+            ->searchPlaceholder('Cari ' . self::getModelLabel() . '...');
     }
 
     public static function getRelations(): array
@@ -77,19 +95,19 @@ class ProvinceResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProvinces::route('/'),
-            'create' => Pages\CreateProvince::route('/create'),
-            'edit' => Pages\EditProvince::route('/{record}/edit'),
+            'index' => Pages\ListRegencies::route('/'),
+            'create' => Pages\CreateRegencie::route('/create'),
+            'edit' => Pages\EditRegencie::route('/{record}/edit'),
         ];
     }
 
     public static function getModelLabel(): string
     {
-        return 'Provinsi';
+        return 'Kota/Kabupaten';
     }
 
     public static function getPluralModelLabel(): string
     {
-        return 'Provinsi';
+        return 'Kota/Kabupaten';
     }
 }
